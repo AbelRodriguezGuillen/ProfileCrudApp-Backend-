@@ -5,6 +5,8 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.bson.Document;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.stereotype.Component;
@@ -16,31 +18,42 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 
 @Component
-public class SearchRepositoryImplementation implements SearchRepository {
+class SearchRepositoryImpl implements SearchRepository {
+
+	private static final Logger logger = LoggerFactory.getLogger(SearchRepositoryImpl.class);
 
 	@Autowired
-	MongoClient client;
+	private MongoClient mongoClient;
+
 	@Autowired
-	MongoConverter converter;
+	private MongoConverter mongoConverter;
 
 	@Override
-	public List<Post> findByText(String text) {
+	public List<Post> search(String text) {
+		List<Post> posts = new ArrayList<>();
 
-		final List<Post> posts = new ArrayList<>();
+		try (MongoDatabase database = mongoClient.getDatabase("joblisting");
+				MongoCollection<Document> collection = database.getCollection("jobpost")) {
 
-		MongoDatabase database = client.getDatabase("abel");
-		MongoCollection<Document> collection = database.getCollection("JobPost");
+			AggregateIterable<Document> result = collection.aggregate(Arrays.asList(
+					new Document("$search", new Document("index", "default")
+							.append("text", new Document("query", text)
+									.append("path", Arrays.asList("techStack", "desc", "title")))),
+					new Document("$sort", new Document("yoe", 1L)),
+					new Document("$limit", 10L)));
 
-		AggregateIterable<Document> result = collection.aggregate(Arrays.asList(
-				new Document("$search",
-						new Document("index", "default").append("text",
-								new Document("query", text).append("path",
-										Arrays.asList("techStack", "desc", "title")))),
-				new Document("$sort", new Document("yoe", 1L)), new Document("$limit", 10L)));
+			result.forEach(doc -> {
+				try {
+					posts.add(mongoConverter.read(Post.class, doc));
+				} catch (Exception e) {
+					logger.warn("Failed to convert document to Post object: {}", doc.toJson(), e);
+				}
+			});
 
-		result.forEach(doc -> posts.add(converter.read(Post.class, doc)));
+		} catch (Exception e) {
+			logger.error("Error searching for posts with text '{}'", text, e);
+		}
 
 		return posts;
 	}
-
 }
