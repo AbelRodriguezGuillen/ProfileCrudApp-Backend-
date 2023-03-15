@@ -23,17 +23,19 @@ import com.abel.jobListing.model.Post;
 import com.abel.jobListing.repository.PostRepository;
 import com.abel.jobListing.repository.SearchRepository;
 
+import io.swagger.annotations.ApiOperation;
 import springfox.documentation.annotations.ApiIgnore;
 
 @RestController
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = "${joblisting.cors.origins}")
+@RequestMapping("/api")
 public class PostController {
 
 	@Autowired
-	PostRepository repo;
+	private PostRepository postRepository;
 
 	@Autowired
-	SearchRepository sRepo;
+	private SearchRepository searchRepository;
 
 	@Autowired
 	private MongoOperations mongoOperations;
@@ -44,42 +46,41 @@ public class PostController {
 		response.sendRedirect("/swagger-ui.html");
 	}
 
-	@GetMapping("/allPosts")
-	@CrossOrigin
+	@ApiOperation(value = "Get all posts")
+	@GetMapping("/posts")
 	public List<Post> getAllPosts() {
-		return repo.findAll();
+		return postRepository.findAll();
 	}
 
-	@GetMapping("/posts/{text}")
-	@CrossOrigin
+	@ApiOperation(value = "Search posts by text")
+	@GetMapping("/posts/search/{text}")
 	public List<Post> search(@PathVariable("text") String text) {
-		return sRepo.findByText(text);
+		return searchRepository.findByText(text);
 	}
 
-	@PostMapping("/post") // whatever data is submitted in the client side will be accepted in post obj
+	@ApiOperation(value = "Add a new post")
+	@PostMapping("/posts")
 	public Post addPost(@RequestBody Post post) {
-		return repo.save(post);
+		return postRepository.save(post);
 	}
 
-	// Get 1 Post
-	@GetMapping("/post/{id}")
-	@CrossOrigin
+	@ApiOperation(value = "Get a post by id")
+	@GetMapping("/posts/{id}")
 	public ResponseEntity<Post> getPostById(@PathVariable("id") String id) {
-		Post post = repo.findById(id).orElse(null);
+		Post post = postRepository.findById(id).orElse(null);
 		if (post == null) {
 			return ResponseEntity.notFound().build();
 		}
 		return ResponseEntity.ok().body(post);
 	}
 
-	// Delete Post
-	@DeleteMapping("/post/{id}")
-	@CrossOrigin
-	public String deleteDataById(@PathVariable String id) {
+	@ApiOperation(value = "Delete a post by id")
+	@DeleteMapping("/posts/{id}")
+	public ResponseEntity<String> deletePostById(@PathVariable String id) {
 		Query query = new Query();
 		query.addCriteria(Criteria.where("_id").is(id));
 		mongoOperations.remove(query, "JobPost");
 
-		return "Data deleted successfully";
+		return ResponseEntity.ok().body("Post deleted successfully");
 	}
 }
