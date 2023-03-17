@@ -27,7 +27,8 @@ import io.swagger.annotations.ApiOperation;
 import springfox.documentation.annotations.ApiIgnore;
 
 @RestController
-@CrossOrigin(origins = "${joblisting.cors.origins}")
+//@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = "${jobListing.cors.origins}")
 @RequestMapping("/api")
 public class PostController {
 
@@ -46,24 +47,36 @@ public class PostController {
 		response.sendRedirect("/swagger-ui.html");
 	}
 
+//	@GetMapping("/allPosts")
+//	@CrossOrigin
+	// GET ALL POSTS
 	@ApiOperation(value = "Get all posts")
 	@GetMapping("/posts")
 	public List<Post> getAllPosts() {
 		return postRepository.findAll();
 	}
 
+//	@GetMapping("/posts/{text}")
+//	@CrossOrigin
+	// SEARCH POSTS
 	@ApiOperation(value = "Search posts by text")
 	@GetMapping("/posts/search/{text}")
 	public List<Post> search(@PathVariable("text") String text) {
 		return searchRepository.findByText(text);
+
 	}
 
+//	@PostMapping("/post") // whatever data is submitted in the client side will be accepted in post obj
+	// ADD A PROFILE
 	@ApiOperation(value = "Add a new post")
 	@PostMapping("/posts")
 	public Post addPost(@RequestBody Post post) {
 		return postRepository.save(post);
 	}
 
+//	@GetMapping("/post/{id}")
+//	@CrossOrigin
+	// GET A POST
 	@ApiOperation(value = "Get a post by id")
 	@GetMapping("/posts/{id}")
 	public ResponseEntity<Post> getPostById(@PathVariable("id") String id) {
@@ -74,6 +87,10 @@ public class PostController {
 		return ResponseEntity.ok().body(post);
 	}
 
+//	@DeleteMapping("/post/{id}")
+//	@CrossOrigin
+//	public String deleteDataById(@PathVariable String id) {
+	// DELETE POST
 	@ApiOperation(value = "Delete a post by id")
 	@DeleteMapping("/posts/{id}")
 	public ResponseEntity<String> deletePostById(@PathVariable String id) {
@@ -81,6 +98,9 @@ public class PostController {
 		query.addCriteria(Criteria.where("_id").is(id));
 		mongoOperations.remove(query, "JobPost");
 
+//		return "Data deleted successfully";
 		return ResponseEntity.ok().body("Post deleted successfully");
+
 	}
+
 }
