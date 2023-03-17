@@ -2,15 +2,27 @@ package com.abel.jobListing.model;
 
 import java.util.Arrays;
 
+import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Document(collection = "JobPost")
 public class Post {
 
+	@Id
+	private String id;
+
 	private String title;
 	private String desc;
 	private int yoe;
 	private String techStack[];
+
+	public String getId() {
+		return id;
+	}
+
+	public void setId(String id) {
+		this.id = id;
+	}
 
 	public Post() {
 		super();
