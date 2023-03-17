@@ -27,8 +27,8 @@ import io.swagger.annotations.ApiOperation;
 import springfox.documentation.annotations.ApiIgnore;
 
 @RestController
-//@CrossOrigin(origins = "http://localhost:3000")
-@CrossOrigin(origins = "${jobListing.cors.origins}")
+@CrossOrigin(origins = "http://localhost:3000")
+//@CrossOrigin(origins = "${jobListing.cors.origins}")
 @RequestMapping("/api")
 public class PostController {
 
